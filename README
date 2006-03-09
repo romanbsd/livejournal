@@ -1,0 +1,68 @@
+=ljrb: LiveJournal Ruby module
+
+Copyright:: Copyright (C) 2005 Evan Martin <martine@danga.com>
+Website:: http://neugierig.org/software/livejournal/ruby
+
+Example usage:
+  require 'livejournal/login'
+
+  puts "Logging in..."
+  user = LiveJournal::User.new('test', 'test')
+  login = LiveJournal::Request::Login.new(user)
+  login.run
+
+  puts "Login response:"
+  login.dumpresponse
+
+  puts "User's full name: #{user.fullname}"
+
+==LiveJournal Datatypes
+* LiveJournal::Server
+* LiveJournal::User
+* LiveJournal::Entry
+* LiveJournal::Comment
+* LiveJournal::Friend
+
+==Implemented Requests
+===Login Requests
+* LiveJournal::Request::Login
+* LiveJournal::Request::SessionGenerate (only useful for syncing)
+===Friend Requests
+* LiveJournal::Request::Friends
+* LiveJournal::Request::FriendOfs
+* LiveJournal::Request::CheckFriends
+===Entry Requests
+* LiveJournal::Request::GetEvents
+* LiveJournal::Request::EditEvent
+
+==Journal Offline Synchronization
+* LiveJournal::Sync::Entries
+* LiveJournal::Sync::Comments
+See samples/export for an example of how to use these.
+
+==SQLite3 Support
+* LiveJournal::Database -- storing/loading entries+comments with SQLite3
+Integrates well with syncing.  See samples/export.
+
+==Other Features
+* LiveJournal::LogJam -- interface with LogJam (http://logjam.danga.com) 's
+  journal exports
+
+==License
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

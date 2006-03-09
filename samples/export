@@ -1,0 +1,154 @@
+#!/usr/bin/ruby
+
+require 'livejournal/sync'
+require 'livejournal/database'
+require 'optparse'
+
+class ProgressBar
+  def initialize(caption)
+    @cur = 0
+    @width = 40
+    print caption
+    print("[" + " "*40 + "]" + "\x08"*41)
+    $stdout.flush
+  end
+
+  def fill_to(pos)
+    dots = pos - @cur
+    print "."*dots
+    $stdout.flush
+    @cur = pos
+  end
+
+  def update(cur, max)
+    fill_to(@width*cur/max)
+  end
+
+  def finish(error=false)
+    return unless @cur >= 0
+    fill_to(@width) unless error
+    puts
+    @cur = -1
+  end
+
+  def self.with_progress(caption)
+    bar = ProgressBar.new(caption)
+    begin
+      yield bar
+    rescue => e
+      bar.finish(true)
+      raise e
+    else
+      bar.finish(false)
+    end
+  end
+end
+
+username = nil
+password = nil
+usejournal = nil
+dbfile = nil
+get_entries = true
+get_comments = true
+opts = OptionParser.new do |opts|
+  opts.on('-u', '--user USERNAME',
+          'Login username') { |username| }
+  opts.on('-p', '--password PASSWORD',
+          'Login password') { |password| }
+  opts.on('-a', '--usejournal JOURNAL',
+          'Journal to sync (USERNAME must have access)') { |usejournal| }
+  opts.on('-d', '--db FILENAME',
+          'Filename for output database') { |dbfile| }
+  opts.on('--nocomments',
+          "Don't fetch comments (only entries)") { get_comments = false }
+  opts.on('--noentries',
+          "Don't fetch entries (only comments)") { get_entries = false }
+end
+opts.parse!(ARGV)
+
+unless username
+  puts opts
+  puts "ERROR: Must specify username."
+  exit 1
+end
+
+unless dbfile
+  puts opts
+  puts "ERROR: Must specify database file."
+  exit 1
+end
+
+unless password
+  print "Enter password (WARNING: echoed to screen): "
+  $stdout.flush
+  password = gets.strip
+end
+
+user = LiveJournal::User.new(username, password)
+user.usejournal = usejournal
+db = LiveJournal::Database.new(dbfile, true)
+db.username = user.usejournal || user.username
+
+if get_entries
+  puts "Fetching entries..."
+  lastsync = db.lastsync
+  puts "Resuming from #{lastsync}." if lastsync
+  sync = LiveJournal::Sync::Entries.new(user, lastsync)
+
+  ProgressBar::with_progress("Fetching metadata: ") do |bar|
+    sync.run_syncitems do |cur, total|
+      bar.update(cur, total)
+    end
+  end
+
+  ProgressBar::with_progress("Fetching bodies: ") do |bar|
+    cur = 0
+    sync.run_sync do |entries, lastsync, remaining|
+      db.transaction do
+        entries.each do |itemid, entry|
+          db.store_entry entry
+        end
+      end
+      db.lastsync = lastsync
+
+      cur += entries.length
+      bar.update(cur, remaining+cur)
+    end
+  end
+end
+
+if get_comments
+  puts "Fetching comments..."
+
+  cs = LiveJournal::Sync::Comments.new(user)
+  next_meta = db.last_comment_meta
+  if next_meta
+    next_meta += 1
+  else
+    next_meta = 0
+  end
+
+  ProgressBar::with_progress("Fetching metadata: ") do |bar|
+    cs.run_metadata(next_meta) do |cur, max, data|
+      db.store_comments_meta data.comments
+      db.store_usermap data.usermap
+      bar.update(cur, max)
+    end
+  end
+
+  next_full = db.last_comment_full
+  if next_full
+    next_full += 1
+  else
+    next_full = 0
+  end
+
+  ProgressBar::with_progress("Fetching bodies: ") do |bar|
+    cs.run_body(next_full) do |cur, max, data|
+      bar.update(cur, max)
+      db.store_comments_full data.comments
+    end
+  end
+end
+
+# vim: ts=2 sw=2 et :

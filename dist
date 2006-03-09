@@ -1,0 +1,6 @@
+# rebuid last-changes list
+./monotone.rb > ../recent
+# build tarball
+cd .. && tar jcf ljrb.tar.bz2 ljrb/README ljrb/livejournal ljrb/samples ljrb/tests ljrb/doc
+# rebuild website
+cd .. && touch index.comas && ~/.local/bin/cms make

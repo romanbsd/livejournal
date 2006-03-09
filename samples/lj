@@ -1,0 +1,23 @@
+#!/usr/bin/ruby
+
+require 'livejournal/login'
+require 'livejournal/entry'
+
+puts "Logging in..."
+user = LiveJournal::User.new('test', 'test')
+login = LiveJournal::Request::Login.new(user)
+login.run
+
+puts "Login response:"
+login.dumpresponse
+
+puts "User's full name: #{user.fullname}"
+
+if false
+  get = LiveJournal::Request::GetEvents.new(user, :recent => 1)
+  entry = get.run
+  get.dumpresponse
+  p entry
+end
+
+# vim: ts=2 sw=2 et :

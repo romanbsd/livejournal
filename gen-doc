@@ -1,0 +1,6 @@
+rdoc \
+  --title "ljrb (LiveJournal Ruby module) Documentation" \
+  --main README \
+  --inline-source \
+  README livejournal
+
