@@ -47,7 +47,7 @@ Rake::TestTask.new :test do |t|
 end
 
 desc 'Push data to my webspace'
-task :pushweb => [:package] do
+task :pushweb => [:rdoc, :package] do
   pkg = "pkg/#{PKG_NAME}-#{PKG_VERSION}"
   target = 'neugierig.org:/home/martine/www/neugierig/htdocs/software/livejournal/ruby'
   sh %{rsync -av --delete doc/* #{target}/doc/}
