@@ -60,7 +60,7 @@ desc 'Push data to my webspace'
 task :pushweb => [:package] do
   pkg = "pkg/#{PKG_NAME}-#{PKG_VERSION}"
   target = 'neugierig.org:/home/martine/www/neugierig/htdocs/software/livejournal/ruby'
-  sh %{rsync -av --delete #{pkg}/* #{target}/src/}
+  sh %{rsync -av --delete doc/* #{target}/doc/}
   sh %{rsync -av #{pkg}.* #{target}/download/}
 end
 
