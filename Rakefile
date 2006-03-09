@@ -9,17 +9,8 @@ PKG_VERSION = '0.0.1'
 
 FILES = FileList[
   'Rakefile', 'README', 'LICENSE', 'setup.rb',
-  'lib/**', 'sample/**', 'test/**'
+  'lib/**/*', 'sample/*', 'test/*'
 ]
-
-desc 'Build Package'
-Rake::PackageTask.new 'package' do |p|
-  p.name = PKG_NAME
-  p.version = PKG_VERSION
-  p.package_files = FILES
-  p.need_tar = true
-  p.need_zip = true
-end
 
 spec = Gem::Specification.new do |s|
   s.name = PKG_NAME
@@ -33,10 +24,14 @@ lists, edit entries, sync journal to an offline database.}
 
   s.has_rdoc = true
   s.files = FILES.to_a
-  s.require_path = 'lib'
 end
 
-Rake::GemPackageTask.new(spec)
+desc 'Build Package'
+Rake::GemPackageTask.new(spec) do |p|
+  p.need_tar = true
+  p.need_zip = true
+end
+
 
 desc 'Generate RDoc'
 Rake::RDocTask.new :rdoc do |rd|
@@ -44,11 +39,6 @@ Rake::RDocTask.new :rdoc do |rd|
   rd.rdoc_dir = 'doc'
   rd.rdoc_files.add 'lib', 'README', 'LICENSE'
   rd.main = 'README'
-end
-
-desc 'Build Gem'
-Rake::GemPackageTask.new spec do |pkg|
-  pkg.need_tar = true
 end
 
 desc 'Run Tests'
