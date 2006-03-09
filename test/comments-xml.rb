@@ -94,13 +94,13 @@ class TC_Parsers < Test::Unit::TestCase
   end
 
   def test_rexml
-    run_meta LiveJournal::CommentsXML::WithREXML.new
-    run_body LiveJournal::CommentsXML::WithREXML.new
+    run_meta LiveJournal::Sync::CommentsXML::WithREXML.new
+    run_body LiveJournal::Sync::CommentsXML::WithREXML.new
   end
   def test_expat
     if LiveJournal::HAVE_XML_PARSER
-      run_meta LiveJournal::CommentsXML::WithExpat.new
-      run_body LiveJournal::CommentsXML::WithExpat.new
+      run_meta LiveJournal::Sync::CommentsXML::WithExpat.new
+      run_body LiveJournal::Sync::CommentsXML::WithExpat.new
     end
   end
 end
