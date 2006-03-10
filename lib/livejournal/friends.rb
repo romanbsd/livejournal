@@ -89,11 +89,11 @@ module LiveJournal
       end
       # Returns true if there are new posts available.
       def run
-        self['lastupdate'] = @lastupdate if @lastupdate
+        @request['lastupdate'] = @lastupdate if @lastupdate
         super
-        @lastupdate = self['lastupdate']
-        @interval = self['interval']
-        self['new'] == '1'
+        @lastupdate = @result['lastupdate']
+        @interval = @result['interval']
+        @result['new'] == '1'
       end
     end
   end

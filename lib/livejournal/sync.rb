@@ -40,14 +40,14 @@ module LiveJournal
       def initialize(user, syncitems=nil, lastsync=nil)
         super(user, 'syncitems')
         @syncitems = syncitems || {}
-        self['lastsync'] = lastsync if lastsync
+        @request['lastsync'] = lastsync if lastsync
       end
 
       def run
         super
         lasttime = nil
         @fetched = 0
-        @total = self['sync_total'].to_i
+        @total = @result['sync_total'].to_i
         each_in_array('sync') do |item|
           item, time = item['item'], item['time']
           next if @syncitems.has_key? item
@@ -75,7 +75,7 @@ module LiveJournal
       end
       def run
         super
-        self['ljsession']
+        @result['ljsession']
       end
     end
   end

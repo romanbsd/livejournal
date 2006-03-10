@@ -58,13 +58,13 @@ module LiveJournal
     class Req #:nodoc:
       def initialize(user, mode)
         @user = user
-        @reqparams = { "user"          => user.username, 
-                       "password"      => user.password,
-                       "mode"          => mode,
-                       "clientversion" => "Ruby",
-                       "ver"           => 1 }
-        @reqparams['usejournal'] = user.usejournal if user.usejournal
-        @results = {}
+        @request = { "user"          => user.username, 
+                     "password"      => user.password,
+                     "mode"          => mode,
+                     "clientversion" => "Ruby",
+                     "ver"           => 1 }
+        @request['usejournal'] = user.usejournal if user.usejournal
+        @result = {}
         @verbose = false
         @dryrun = false
       end
@@ -72,18 +72,10 @@ module LiveJournal
       def verbose!; @verbose = true; end
       def dryrun!; @dryrun = true; end
 
-      def []=(key, value)
-        @reqparams[key] = value
-      end
-
-      def [](key)
-        @result[key]
-      end
-
       def run
         h = Net::HTTP.new('www.livejournal.com')
         h.set_debug_output $stderr if @verbose
-        request = @reqparams.collect { |key, value|
+        request = @request.collect { |key, value|
           "#{CGI.escape(key)}=#{CGI.escape(value.to_s)}"
         }.join("&")
         p request if @verbose
@@ -91,7 +83,7 @@ module LiveJournal
         response, data = h.post('/interface/flat', request)
         parseresponse(data)
         dumpresponse if @verbose
-        if self['success'] != "OK"
+        if @result['success'] != "OK"
           raise ProtocolException, self['errmsg']
         end
       end

@@ -184,17 +184,17 @@ module LiveJournal
       # * <tt>GetEvents.new(user, :lastsync => lastsync)</tt> (for syncing)
       def initialize(user, opts)
         super(user, 'getevents')
-        self['lineendings'] = 'unix'
+        @request['lineendings'] = 'unix'
 
         if opts.has_key? :itemid
-          self['selecttype'] = 'one'
-          self['itemid'] = opts[:itemid]
+          @request['selecttype'] = 'one'
+          @request['itemid'] = opts[:itemid]
         elsif opts.has_key? :recent
-          self['selecttype'] = 'lastn'
-          self['howmany'] = opts[:recent]
+          @request['selecttype'] = 'lastn'
+          @request['howmany'] = opts[:recent]
         elsif opts.has_key? :lastsync
-          self['selecttype'] = 'syncitems'
-          self['lastsync'] = opts[:lastsync] if opts[:lastsync]
+          @request['selecttype'] = 'syncitems'
+          @request['lastsync'] = opts[:lastsync] if opts[:lastsync]
         end
       end
 
@@ -214,8 +214,8 @@ module LiveJournal
           entries[itemid].load_prop(prop['name'], prop['value'])
         end
 
-        if @reqparams.has_key? 'itemid'
-          return entries[@reqparams['itemid']]
+        if @request.has_key? 'itemid'
+          return entries[@request['itemid']]
         else
           return entries
         end
@@ -224,33 +224,33 @@ module LiveJournal
     class EditEvent < Req
       def initialize(user, entry, opts={})
         super(user, 'editevent')
-        self['itemid'] = entry.itemid
+        @request['itemid'] = entry.itemid
         if entry.event
-          self['event'] = entry.event
+          @request['event'] = entry.event
         elsif entry.entry.nil? and opts.has_key? :delete
-          self['event'] = ''
+          @request['event'] = ''
         else
           raise AccidentalDeleteError
         end
-        self['lineendings'] = 'unix'
-        self['subject'] = entry.subject
+        @request['lineendings'] = 'unix'
+        @request['subject'] = entry.subject
 
         case entry.security
         when :public
-          self['security'] = 'public'
+          @request['security'] = 'public'
         when :friends
-          self['security'] = 'usemask'
-          self['allowmask'] = 1
+          @request['security'] = 'usemask'
+          @request['allowmask'] = 1
         when :private
-          self['security'] = 'private'
+          @request['security'] = 'private'
         when :custom
-          self['security'] = 'usemask'
-          self['allowmask'] = entry.allowmask
+          @request['security'] = 'usemask'
+          @request['allowmask'] = entry.allowmask
         end
 
-        self['year'], self['mon'], self['day'] = 
+        @request['year'], @request['mon'], @request['day'] = 
           entry.time.year, entry.time.mon, entry.time.day
-        self['hour'], self['min'] = entry.time.hour, entry.time.min
+        @request['hour'], @request['min'] = entry.time.hour, entry.time.min
 
         { 'current_mood' => entry.mood,
           'current_moodid' => entry.moodid,
@@ -270,7 +270,7 @@ module LiveJournal
             when :default; ''
             end
         }.each do |name, value|
-          self["prop_#{name}"] = value
+          @request["prop_#{name}"] = value
         end
       end
     end
