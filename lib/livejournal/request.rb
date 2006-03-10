@@ -84,7 +84,7 @@ module LiveJournal
         parseresponse(data)
         dumpresponse if @verbose
         if @result['success'] != "OK"
-          raise ProtocolException, self['errmsg']
+          raise ProtocolException, @result['errmsg']
         end
       end
 
@@ -102,8 +102,8 @@ module LiveJournal
       end
 
       def each_in_array(base)
-        for i in 1..(self["#{base}_count"].to_i) do
-          yield HashStrip.new("#{base}_#{i.to_s}_", self)
+        for i in 1..(@result["#{base}_count"].to_i) do
+          yield HashStrip.new("#{base}_#{i.to_s}_", @result)
         end
       end
       def build_array(base)

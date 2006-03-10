@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/ruby -I../lib
 
 require 'livejournal/sync'
 require 'livejournal/database'
