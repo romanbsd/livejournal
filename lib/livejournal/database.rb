@@ -146,10 +146,10 @@ module LiveJournal
       end
     end
 
-    # Yield most recent limit entries.
-    def each_entry(limit=nil, &block)
-      sql = 'SELECT * FROM entry ORDER BY itemid DESC'
-      sql += " LIMIT #{limit}" if limit
+    # Yield a set of entries.
+    def each_entry(where=nil, &block)
+      sql = 'SELECT * FROM entry ORDER BY itemid ASC'
+      sql += " WHERE #{where}" if where
       query_entries sql, &block
     end
 

@@ -1,0 +1,199 @@
+#!/usr/bin/ruby -I../lib
+
+require 'rubygems'
+require 'gruff'
+require 'livejournal/database'
+require 'livejournal/entry'
+require 'optparse'
+require 'time'
+
+class Options
+  # required options
+  attr_reader :dbfile, :outfile, :mode
+  # optional options
+  attr_reader :smooth, :normalize, :geom, :starttime, :endtime
+  # mode-specific options
+  attr_reader :tags
+
+  def initialize
+    @smooth = 1
+    @dbfile = nil
+    @outfile = nil
+    @normalize = false
+    @mode = nil
+    @geom = 800
+    @opts = OptionParser.new do |o|
+      o.banner = "usage: graph [options] [modeparam [modeparam ...]]"
+      o.on('-d', '--db=FILE', 'database (required)') { |@dbfile| }
+      o.on('-o', '--out=FILENAME.PNG', 'output file (required)') { |@outfile| }
+      o.on('-g', '--geom=WxH', 'output geometry') { |@geom| }
+      o.on('--smooth=N',
+           'merge every set of n consecutive datapoints') do |smooth|
+        @smooth = smooth.to_i
+      end
+      o.on('--normalize',
+           'normalize relative to entry counts') { |@normalize| }
+      o.on('--start=TIME', 'start time') { |t| @starttime = Time.parse t }
+      o.on('--end=TIME',   'end time')   { |t| @endtime = Time.parse t }
+      o.on('-m', '--mode=MODE',
+           'mode (required) one of {tags, security}') do |mode|
+        case mode
+        when 'tags'
+          @mode = :tags
+        when 'security'
+          @mode = :security
+        else
+          die "bad mode #{mode}"
+        end
+      end
+    end
+    self
+  end
+  def parse!(argv)
+    @opts.parse! ARGV
+    check_params
+    self
+  end
+  def die(msg)
+    puts msg
+    puts @opts
+    exit 1
+  end
+  def check_params
+    die "must specify database." unless @dbfile
+    die "must specify database." unless @outfile
+    die "must specify mode."     unless @mode
+
+    case @mode
+    when :tags
+      @tags = ARGV
+      unless @tags.length > 0
+        die "must specify at least one tag as an extra command-line parameter."
+      end
+    end
+  end
+end
+$opts = Options.new.parse! ARGV
+
+class DataSet
+  # store a series of (time, class, count) observations.
+
+  def initialize
+    # data:  klass -> time -> count
+    @data = Hash.new { |h,k| h[k] = Hash.new { |h,k| h[k] = 0 } }
+    @firsttime = @lasttime = nil
+    @bucketing = :month
+  end
+
+  def bucket(time)
+    case @bucketing
+    when :month
+      mon = time.month
+      if $opts.smooth != 1
+        # when smooth = 3,
+        #   1 -> 1
+        #   3 -> 1
+        #   4 -> 4
+        #   5 -> 4
+        #  12 -> 10
+        mon = ((mon-1)/$opts.smooth * $opts.smooth) + 1
+      end
+      "%d-%02d" % [time.year, mon]
+    end
+  end
+
+  def each_bucket
+    case @bucketing
+    when :month
+      time = Date.parse(@firsttime.strftime('%Y-%m-01'))
+      lasttime = Date.parse(@lasttime.strftime('%Y-%m-01'))
+      lastbucket = nil
+      while time < lasttime
+        b = bucket(time)
+        yield b if b != lastbucket
+        lastbucket = b
+        time = time >> 1
+      end
+    end
+  end
+
+  def labels(count=5)
+    total = 0
+    each_bucket { total += 1 }
+    skip = (total / count.to_f).round
+
+    labels = {}
+    i = 0
+    each_bucket do |bucket|
+      labels[i] = bucket if i % skip == 0
+      i += 1
+    end
+    labels
+  end
+
+  def get_class(klass)
+    buckets = []
+    data = @data[klass]
+    each_bucket do |bucket|
+      buckets << if data.has_key? bucket
+                   if $opts.normalize
+                     data[bucket] / @data[:total][bucket].to_f
+                   else
+                     data[bucket]
+                   end
+                 else
+                   0
+                 end
+    end
+    buckets
+  end
+
+  def add(klass, time, count=1)
+    @firsttime = time if @firsttime.nil? or time < @firsttime
+    @lasttime  = time if @lasttime.nil?  or time > @lasttime
+    @data[klass][bucket(time)] += count
+  end
+end
+
+dataset = DataSet.new
+db = LiveJournal::Database.new $opts.dbfile
+total_entries = 0
+
+db.each_entry do |entry|
+  next if $opts.starttime and $opts.starttime > entry.time 
+  next if $opts.endtime and $opts.endtime < entry.time 
+
+  dataset.add(:total, entry.time, 1)
+  case $opts.mode
+  when :tags
+    entry.taglist.each do |tag|
+      dataset.add(tag, entry.time)
+    end
+  when :security
+    case entry.security
+    when :public;  dataset.add(:public, entry.time)
+    when :friends; dataset.add(:friends, entry.time)
+    else; dataset.add(:other, entry.time)
+    end
+  end
+  total_entries += 1
+end
+
+g = Gruff::Line.new($opts.geom)
+g.labels = dataset.labels
+case $opts.mode
+when :tags
+  g.title = 'Tag Rate'
+  $opts.tags.each do |tag|
+    g.data(tag, dataset.get_class(tag))
+  end
+when :security
+  g.title = 'Entry Security'
+  [:public, :friends, :other].each do |sec|
+    g.data(sec.to_s, dataset.get_class(sec))
+  end
+end
+g.write $opts.outfile
+
+# vim: ts=2 sw=2 et :
+
