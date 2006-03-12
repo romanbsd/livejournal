@@ -26,8 +26,7 @@
 require 'livejournal/request'
 # As well as a custom XML format via REST, for comments:
 # http://www.livejournal.com/developer/exporting.bml
-require 'net/http'
-require 'uri'
+require 'open-uri'
 require 'livejournal/comments-xml'
 
 require 'livejournal/entry'
@@ -145,13 +144,13 @@ module LiveJournal
         path = "/export_comments.bml?get=comment_#{mode}&startid=#{start}"
         # authas:  hooray for features discovered by reading source!
         path += "&authas=#{@user.usejournal}" if @user.usejournal
-        url = URI.parse(@user.server.url + path)
-                        
-        http = Net::HTTP.new(url.host, url.port)
-        resp, data = http.get(url, 'Cookie' => "ljsession=#{@session}")
-        # XXX we'd like to stream this data to the XML parser.
-        # is this possible?
-        raise RuntimeError, "XXX" if resp.code != '200'
+
+        data = nil
+        open(@user.server.url + path,
+             'Cookie' => "ljsession=#{@session}") do |f|
+          # XXX stream this data to the XML parser.
+          data = f.read
+        end
         return data
       end
       private :run_GET
