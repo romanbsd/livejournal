@@ -1,7 +1,17 @@
 #!/usr/bin/ruby -I../lib
 
-require 'rubygems'
-require 'gruff'
+begin
+  require 'rubygems'
+  require 'gruff'
+rescue LoadError => e
+  puts <<EOT
+Error loading libraries: #{e}
+Though ljrb itself doesn't require them, the graph sample uses
+the gruff library: http://nubyonrails.com/pages/gruff ,
+which itself requires rubygems.
+EOT
+  exit 1
+end
 require 'livejournal/database'
 require 'livejournal/entry'
 require 'optparse'
