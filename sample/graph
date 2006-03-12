@@ -71,8 +71,8 @@ class Options
   end
   def check_params
     die "must specify database." unless @dbfile
-    die "must specify database." unless @outfile
-    die "must specify mode."     unless @mode
+    die "must specify output file." unless @outfile
+    die "must specify mode." unless @mode
 
     case @mode
     when :tags
