@@ -27,6 +27,7 @@ require 'livejournal/basic'
 require 'cgi'
 require 'net/http'
 require 'date'
+require 'digest/md5'
 
 module LiveJournal
   module Request
@@ -58,12 +59,19 @@ module LiveJournal
     class Req #:nodoc:
       def initialize(user, mode)
         @user = user
-        @request = { "user"          => user.username, 
-                     "password"      => user.password,
-                     "mode"          => mode,
-                     "clientversion" => "Ruby",
-                     "ver"           => 1 }
-        @request['usejournal'] = user.usejournal if user.usejournal
+        @request = { 'mode'          => mode,
+                     'clientversion' => 'Ruby',
+                     'ver'           => 1 }
+        if user
+          challenge = GetChallenge.new.run
+          response = Digest::MD5.hexdigest(challenge +
+                       Digest::MD5.hexdigest(user.password))
+          @request.update({ 'user'           => user.username,
+                            'auth_method'    => 'challenge',
+                            'auth_challenge' => challenge,
+                            'auth_response'  => response })
+          @request['usejournal'] = user.usejournal if user.usejournal
+        end
         @result = {}
         @verbose = false
         @dryrun = false
@@ -112,7 +120,17 @@ module LiveJournal
         array
       end
     end
+
+    class GetChallenge < Req
+      def initialize
+        super(nil, 'getchallenge')
+      end
+      def run
+        super
+        return @result['challenge']
+      end
+    end
   end
 end
 
-# vim: ts=2 sw=2 et :
+# vim: ts=2 sw=2 et cino=(0 :
