@@ -74,9 +74,14 @@ module LiveJournal
 
     def ==(other)
       [:subject, :event, :moodid, :mood, :music, :taglist, :pickeyword,
-       :preformatted, :backdated, :comments, :time, :security, :allowmask,
+       :preformatted, :backdated, :comments, :security, :allowmask,
        :screening, :props].each do |attr|
         return false if send(attr) != other.send(attr)
+      end
+      # compare time fields one-by-one because livejournal ignores the
+      # "seconds" field.
+      [:year, :mon, :day, :hour, :min, :zone].each do |attr|
+        return false if @time.send(attr) != other.time.send(attr)
       end
       return true
     end
@@ -176,11 +181,11 @@ module LiveJournal
     end
 
     def add_to_request req
-      req['event'] = entry.event
+      req['event'] = self.event
       req['lineendings'] = 'unix'
-      req['subject'] = entry.subject
+      req['subject'] = self.subject
 
-      case entry.security
+      case self.security
       when :public
         req['security'] = 'public'
       when :friends
@@ -190,24 +195,24 @@ module LiveJournal
         req['security'] = 'private'
       when :custom
         req['security'] = 'usemask'
-        req['allowmask'] = entry.allowmask
+        req['allowmask'] = self.allowmask
       end
 
       req['year'], req['mon'], req['day'] = 
-        entry.time.year, entry.time.mon, entry.time.day
-      req['hour'], req['min'] = entry.time.hour, entry.time.min
+        self.time.year, self.time.mon, self.time.day
+      req['hour'], req['min'] = self.time.hour, self.time.min
 
-      { 'current_mood' => entry.mood,
-        'current_moodid' => entry.moodid,
-        'current_music' => entry.music,
-        'picture_keyword' => entry.pickeyword,
-        'taglist' => entry.taglist.join(', '),
-        'opt_preformatted' => entry.preformatted ? 1 : 0,
-        'opt_nocomments' => entry.comments == :none ? 1 : 0,
-        'opt_noemail' => entry.comments == :noemail ? 1 : 0,
-        'opt_backdated' => entry.backdated ? 1 : 0,
+      { 'current_mood' => self.mood,
+        'current_moodid' => self.moodid,
+        'current_music' => self.music,
+        'picture_keyword' => self.pickeyword,
+        'taglist' => self.taglist.join(', '),
+        'opt_preformatted' => self.preformatted ? 1 : 0,
+        'opt_nocomments' => self.comments == :none ? 1 : 0,
+        'opt_noemail' => self.comments == :noemail ? 1 : 0,
+        'opt_backdated' => self.backdated ? 1 : 0,
         'opt_screening' =>
-          case entry.screening
+          case self.screening
           when :all; 'A'
           when :anonymous; 'R'
           when :nonfriends; 'F'
@@ -222,9 +227,16 @@ module LiveJournal
 
   module Request
     class PostEvent < Req
-      def initialize(user)
+      def initialize(user, entry)
         super(user, 'postevent')
         entry.add_to_request @request
+        @entry = entry
+      end
+
+      def run
+        super
+        @entry.itemid = @result['itemid'].to_i
+        @entry.anum = @result['anum'].to_i
       end
     end
 
@@ -246,6 +258,8 @@ module LiveJournal
         elsif opts.has_key? :lastsync
           @request['selecttype'] = 'syncitems'
           @request['lastsync'] = opts[:lastsync] if opts[:lastsync]
+        else
+          raise ArgumentError, 'invalid options for GetEvents'
         end
       end
 
@@ -278,11 +292,14 @@ module LiveJournal
         super(user, 'editevent')
 
         @request['itemid'] = entry.itemid
-        entry.add_to_request @request
-
-        if entry.event.nil?
-          raise AccidentalDeleteError unless opts.has_key? :delete
+        if opts.has_key? :delete
           @request['event'] = ''
+        else
+          entry.add_to_request @request
+        end
+
+        if @request['event'].nil? or @request['event'].empty?
+          raise AccidentalDeleteError unless opts.has_key? :delete
         end
       end
     end
