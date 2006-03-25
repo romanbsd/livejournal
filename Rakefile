@@ -5,7 +5,7 @@ require 'rake/rdoctask'
 require 'rake/testtask'
 
 PKG_NAME = 'livejournal'
-PKG_VERSION = '0.0.1'
+PKG_VERSION = '0.1.0'
 
 FILES = FileList[
   'Rakefile', 'README', 'LICENSE', 'setup.rb',
