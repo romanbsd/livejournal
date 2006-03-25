@@ -174,9 +174,60 @@ module LiveJournal
       end
       html
     end
+
+    def add_to_request req
+      req['event'] = entry.event
+      req['lineendings'] = 'unix'
+      req['subject'] = entry.subject
+
+      case entry.security
+      when :public
+        req['security'] = 'public'
+      when :friends
+        req['security'] = 'usemask'
+        req['allowmask'] = 1
+      when :private
+        req['security'] = 'private'
+      when :custom
+        req['security'] = 'usemask'
+        req['allowmask'] = entry.allowmask
+      end
+
+      req['year'], req['mon'], req['day'] = 
+        entry.time.year, entry.time.mon, entry.time.day
+      req['hour'], req['min'] = entry.time.hour, entry.time.min
+
+      { 'current_mood' => entry.mood,
+        'current_moodid' => entry.moodid,
+        'current_music' => entry.music,
+        'picture_keyword' => entry.pickeyword,
+        'taglist' => entry.taglist.join(', '),
+        'opt_preformatted' => entry.preformatted ? 1 : 0,
+        'opt_nocomments' => entry.comments == :none ? 1 : 0,
+        'opt_noemail' => entry.comments == :noemail ? 1 : 0,
+        'opt_backdated' => entry.backdated ? 1 : 0,
+        'opt_screening' =>
+          case entry.screening
+          when :all; 'A'
+          when :anonymous; 'R'
+          when :nonfriends; 'F'
+          when :none; 'N'
+          when :default; ''
+          end
+      }.each do |name, value|
+        req["prop_#{name}"] = value
+      end
+    end
   end
 
   module Request
+    class PostEvent < Req
+      def initialize(user)
+        super(user, 'postevent')
+        entry.add_to_request @request
+      end
+    end
+
     class GetEvents < Req
       # We support three different types of GetEvents:
       # * <tt>GetEvents.new(user, :itemid => itemid)</tt> (fetch a single item)
@@ -221,56 +272,17 @@ module LiveJournal
         end
       end
     end
+
     class EditEvent < Req
       def initialize(user, entry, opts={})
         super(user, 'editevent')
+
         @request['itemid'] = entry.itemid
-        if entry.event
-          @request['event'] = entry.event
-        elsif entry.entry.nil? and opts.has_key? :delete
+        entry.add_to_request @request
+
+        if entry.event.nil?
+          raise AccidentalDeleteError unless opts.has_key? :delete
           @request['event'] = ''
-        else
-          raise AccidentalDeleteError
-        end
-        @request['lineendings'] = 'unix'
-        @request['subject'] = entry.subject
-
-        case entry.security
-        when :public
-          @request['security'] = 'public'
-        when :friends
-          @request['security'] = 'usemask'
-          @request['allowmask'] = 1
-        when :private
-          @request['security'] = 'private'
-        when :custom
-          @request['security'] = 'usemask'
-          @request['allowmask'] = entry.allowmask
-        end
-
-        @request['year'], @request['mon'], @request['day'] = 
-          entry.time.year, entry.time.mon, entry.time.day
-        @request['hour'], @request['min'] = entry.time.hour, entry.time.min
-
-        { 'current_mood' => entry.mood,
-          'current_moodid' => entry.moodid,
-          'current_music' => entry.music,
-          'picture_keyword' => entry.pickeyword,
-          'taglist' => entry.taglist.join(', '),
-          'opt_preformatted' => entry.preformatted ? 1 : 0,
-          'opt_nocomments' => entry.comments == :none ? 1 : 0,
-          'opt_noemail' => entry.comments == :noemail ? 1 : 0,
-          'opt_backdated' => entry.backdated ? 1 : 0,
-          'opt_screening' =>
-            case entry.screening
-            when :all; 'A'
-            when :anonymous; 'R'
-            when :nonfriends; 'F'
-            when :none; 'N'
-            when :default; ''
-            end
-        }.each do |name, value|
-          @request["prop_#{name}"] = value
         end
       end
     end
