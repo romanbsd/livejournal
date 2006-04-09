@@ -66,15 +66,18 @@ opts = OptionParser.new do |opts|
 end
 opts.parse!(ARGV)
 
-unless username
-  puts opts
-  puts "ERROR: Must specify username."
-  exit 1
-end
-
 unless dbfile
   puts opts
   puts "ERROR: Must specify database file."
+  exit 1
+end
+
+db = LiveJournal::Database.new(dbfile, true)
+username ||= db.username
+
+unless username
+  puts opts
+  puts "ERROR: Must specify username."
   exit 1
 end
 
@@ -86,7 +89,6 @@ end
 
 user = LiveJournal::User.new(username, password)
 user.usejournal = usejournal
-db = LiveJournal::Database.new(dbfile, true)
 db.username = user.usejournal || user.username
 
 if get_entries
