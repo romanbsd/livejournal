@@ -1,0 +1,198 @@
+#!/usr/bin/ruby -I../lib
+
+require 'fusefs'
+require 'livejournal/database'
+require 'livejournal/entry'
+require 'stringio'
+
+class DBQuery
+  def initialize
+    @db = $db
+  end
+  def has_any?(where, *args)
+    exists = @db.db.get_first_value("SELECT itemid #{where} LIMIT 1", *args)
+    exists != nil
+  end
+  def has_year? year
+    has_any?("FROM entry WHERE year=?", year)
+  end
+  def has_month? year, month
+    has_any?("FROM entry WHERE year=? AND month=?", year, month)
+  end
+  def has_day? year, month, day
+    has_any?("FROM entry WHERE year=? AND month=? AND day=?", year, month, day)
+  end
+  def has_entry? itemid
+    has_any?("FROM entry WHERE itemid=?", itemid)
+  end
+
+  def get_array(sql, *args)
+    array = []
+    @db.db.execute("SELECT DISTINCT #{sql}", *args) do |row|
+      array << row[0]
+    end
+    array
+  end
+
+  def years
+    get_array('year FROM entry')
+  end
+  def months year
+    get_array('month FROM entry WHERE year=?', year).map { |m| "%02d" % m }
+  end
+  def days year, month
+    get_array('day FROM entry WHERE year=? AND month=?', year, month).map { |d| "%02d" % d }
+  end
+
+  def day_entries year, month, day
+    get_array('itemid FROM entry WHERE year=? AND month=? AND day=?',
+              year, month, day)
+  end
+end
+
+class Dispatcher < FuseFS::FuseDir
+  def initialize
+    @matches = []
+  end
+  def register(match, target)
+    @matches << [match, target]
+  end
+
+  def dispatch(sym, path, *args)
+    path, rest = split_path path if path
+    if path
+      @matches.each do |match, target|
+        if path =~ match
+          return target.dispatch(sym, rest, *(args+[path]))
+        end
+      end
+    end
+
+    # otherwise, dispatch it to the current object
+    begin
+      s = self.send(sym, path, *args)
+    rescue
+      p $!
+    end
+    return s
+  end
+end
+
+class DispatchDir < FuseFS::FuseDir
+  def initialize dispatcher
+    @dispatcher = dispatcher
+  end
+
+  def self.add_dispatch(*args)
+    args.each do |sym|
+      class_eval %{def #{sym}(path, *args)
+        @dispatcher.dispatch(#{sym.inspect}, path, *args)
+      end}
+    end
+  end
+
+  add_dispatch :directory?, :file?
+  add_dispatch :contents, :read_file
+end
+
+class LJFS < Dispatcher
+  class Day < Dispatcher
+    def contents path, year, mon, day
+      entries = $dbq.day_entries year, mon, day
+      entries.map do |itemid|
+        "#{itemid}.txt"
+      end
+    end
+    def directory? path, year, mon, day
+      path == nil and $dbq.has_day? year, mon, day
+    end
+    def file? path, year, mon, day
+      return false unless $dbq.has_day? year, mon, day
+      return false unless path =~ /^(\d+)\.txt$/
+      itemid = $1
+      return false unless $dbq.has_entry? itemid
+      true
+    end
+    def read_file path, year, mon, day
+      return false unless $dbq.has_day? year, mon, day
+      return false unless path =~ /^(\d+)\.txt$/
+      itemid = $1
+      return false unless $dbq.has_entry? itemid
+      entry = $db.get_entry itemid
+      out = StringIO.new
+      if entry.subject
+        out.puts entry.subject
+        out.puts("=" * entry.subject.length)
+        out.puts
+      end
+      out.puts entry.event
+      out.rewind
+      return out.read
+    end
+  end
+  class Month < Dispatcher
+    def initialize
+      super
+      register(/^\d{2}/, Day.new)
+    end
+    def directory? path, year, mon
+      path == nil and $dbq.has_month? year, mon
+    end
+    def file? path, year, mon
+      false
+    end
+    def contents path, year, mon
+      $dbq.days year, mon
+    end
+  end
+
+  class Year < Dispatcher
+    def initialize
+      super
+      register(/^\d{2}/, Month.new)
+    end
+    def directory? path, year
+      path == nil and $dbq.has_year? year
+    end
+    def file? path, year
+      false
+    end
+    def contents path, year
+      $dbq.months year
+    end
+  end
+
+  def initialize
+    super
+    register(/^\d{4}$/, Year.new)
+  end
+
+  def directory? path
+    return false
+  end
+  def file? path
+    return path == 'username'
+  end
+  def read_file path
+    return $db.username
+  end
+  def contents *args
+    return ['username'] + $dbq.years
+  end
+end
+
+unless ARGV.length == 2
+  puts "usage: #{$0} dbfile mountpoint"
+  exit 1
+end
+dbfile, mountpoint = ARGV
+
+$db = LiveJournal::Database.new dbfile
+$dbq = DBQuery.new  # temp hack
+root = DispatchDir.new LJFS.new
+
+FuseFS.set_root root
+FuseFS.mount_under mountpoint
+FuseFS.run
+
+# vim: ts=2 sw=2 et :
