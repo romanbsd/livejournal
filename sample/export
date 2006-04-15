@@ -82,9 +82,20 @@ unless username
 end
 
 unless password
-  print "Enter password (WARNING: echoed to screen): "
+  noecho = system('stty -echo')
+  print "Enter password"
+  print "(WARNING: echoed to screen)" unless noecho
+  print ": "
   $stdout.flush
-  password = gets.strip
+
+  begin
+    password = gets.strip
+  ensure
+    if noecho
+      system('stty sane')
+      puts  # since the user input didn't add the newline for us...
+    end
+  end
 end
 
 user = LiveJournal::User.new(username, password)
