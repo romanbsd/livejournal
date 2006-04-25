@@ -30,19 +30,19 @@ module LiveJournal
   # A SQLite database dump.
   class DatabaseError < RuntimeError; end
   class Database
-    EXPECTED_DATABASE_VERSION = "1"
+    EXPECTED_DATABASE_VERSION = "2"
     SCHEMA = %q{
       CREATE TABLE meta (
-        key STRING PRIMARY KEY,
-        value STRING 
+        key TEXT PRIMARY KEY,
+        value TEXT 
       );
       CREATE TABLE entry (
         itemid INTEGER PRIMARY KEY,
         anum INTEGER,
-        subject STRING,
-        event STRING,
-        moodid INTEGER, mood STRING, music STRING, taglist STRING, 
-        pickeyword STRING, preformatted INTEGER, backdated INTEGER, 
+        subject TEXT,
+        event TEXT,
+        moodid INTEGER, mood TEXT, music TEXT, taglist TEXT, 
+        pickeyword TEXT, preformatted INTEGER, backdated INTEGER, 
         comments INTEGER, year INTEGER, month INTEGER, day INTEGER, 
         timestamp INTEGER, security INTEGER
       );
@@ -53,20 +53,20 @@ module LiveJournal
         posterid INTEGER,
         itemid INTEGER,
         parentid INTEGER,
-        state STRING,  -- screened/deleted/active
-        subject STRING,
-        body STRING,
+        state TEXT,  -- screened/deleted/active
+        subject TEXT,
+        body TEXT,
         timestamp INTEGER  -- unix timestamp
       );
       CREATE INDEX commententry ON comment (itemid);
       CREATE TABLE users (
         userid INTEGER PRIMARY KEY,
-        username STRING
+        username TEXT
       );
       CREATE TABLE commentprop (
         commentid INTEGER,  -- not primary key 'cause non-unique
-        key STRING,
-        value STRING
+        key TEXT,
+        value TEXT
       );
       }.gsub(/^      /, '')
 
