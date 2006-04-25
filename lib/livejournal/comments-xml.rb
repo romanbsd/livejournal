@@ -29,10 +29,13 @@ require 'livejournal/comment'
 require 'time'  # parsing xmlschema times
 
 module LiveJournal
-  HAVE_XML_PARSER = true
-
-  require 'rexml/document'
-  require 'xml/parser' if HAVE_XML_PARSER
+  begin
+    require 'xml/parser'
+    HAVE_XML_PARSER = true
+  rescue Exception
+    require 'rexml/document'
+    HAVE_XML_PARSER = false
+  end
 
   module Sync
     module CommentsXML
