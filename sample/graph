@@ -206,4 +206,3 @@ end
 g.write $opts.outfile
 
 # vim: ts=2 sw=2 et :
-
