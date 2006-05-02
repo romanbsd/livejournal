@@ -50,6 +50,9 @@ module LiveJournal
       @usejournal = nil
       @server = server || LiveJournal::DEFAULT_SERVER
     end
+    def journal
+      @usejournal || @username
+    end
     def to_s
       "#{@username}: '#{@fullname}'"
     end
