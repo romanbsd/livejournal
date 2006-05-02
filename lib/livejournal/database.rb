@@ -148,8 +148,9 @@ module LiveJournal
 
     # Yield a set of entries.
     def each_entry(where=nil, &block)
-      sql = 'SELECT * FROM entry ORDER BY itemid ASC'
+      sql = 'SELECT * FROM entry'
       sql += " WHERE #{where}" if where
+      sql += ' ORDER BY itemid ASC'
       query_entries sql, &block
     end
 
