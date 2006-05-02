@@ -164,6 +164,12 @@ module LiveJournal
       (@itemid << 8) + @anum
     end
 
+    def url(user)
+      raise UnimplementedError, "only works for lj.com" unless user.server == LiveJournal::DEFAULT_SERVER
+      journal = user.journal.gsub(/_/, '-')
+      "http://#{journal}.livejournal.com/#{display_itemid}.html"
+    end
+
     # Render LJ markup to an HTML simulation.
     # (The server to use is for rendering links to other LJ users.)
     def event_as_html server=LiveJournal::DEFAULT_SERVER
