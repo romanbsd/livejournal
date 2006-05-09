@@ -80,8 +80,21 @@ module LiveJournal
       end
     end
 
+    # An example of polling for friends list updates.
+    #   req = LiveJournal::Request::CheckFriends.new(user)
+    #   req.run   # always will return false on the first run.
+    #   loop do
+    #     puts "Waiting for new entries..."
+    #     sleep req.interval   # uses the server-recommended sleep time.
+    #     break if req.run == true
+    #   end
+    #   puts "#{user.username}'s friends list has been updated!"
     class CheckFriends < Req
+      # The server-recommended number of seconds to wait between running this.
       attr_reader :interval
+      # If you want to keep your CheckFriends state without saving the object,
+      # save the #lastupdate field and pass it to a new object.
+      attr_reader :lastupdate
       def initialize(user, lastupdate=nil)
         super(user, 'checkfriends')
         @lastupdate = lastupdate
@@ -92,7 +105,7 @@ module LiveJournal
         @request['lastupdate'] = @lastupdate if @lastupdate
         super
         @lastupdate = @result['lastupdate']
-        @interval = @result['interval']
+        @interval = @result['interval'].to_i
         @result['new'] == '1'
       end
     end
