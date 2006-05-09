@@ -269,8 +269,8 @@ module LiveJournal
         end
       end
 
-      # Returns either a single #Entry or an array of #Entry, depending on
-      # the mode this was constructed with.
+      # Returns either a single #Entry or a hash of itemid => #Entry, depending
+      # on the mode this was constructed with.
       def run
         super
 
