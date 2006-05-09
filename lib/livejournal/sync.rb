@@ -68,10 +68,13 @@ module LiveJournal
       end
     end
 
+    # This is only used for generating sessions used for syncing comments.
+    # It is used by ljrb internally.
     class SessionGenerate < Req
       def initialize(user)
         super(user, 'sessiongenerate')
       end
+      # Returns the LJ session.
       def run
         super
         @result['ljsession']

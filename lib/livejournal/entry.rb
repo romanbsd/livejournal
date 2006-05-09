@@ -170,8 +170,10 @@ module LiveJournal
       "http://#{journal}.livejournal.com/#{display_itemid}.html"
     end
 
-    # Render LJ markup to an HTML simulation.
-    # (The server to use is for rendering links to other LJ users.)
+    # Render LJ markup to an HTML simulation of what is displayed on LJ
+    # itself.  (XXX this needs some work: polls, better preformatting, etc.)
+    #
+    # (The server to use is necessary for rendering links to other LJ users.)
     def event_as_html server=LiveJournal::DEFAULT_SERVER
       # I'd like to use REXML but the content isn't XML, so REs it is!
       html = @event.dup
@@ -239,6 +241,9 @@ module LiveJournal
         @entry = entry
       end
 
+      # Post an #Entry as a new post.  Fills in the <tt>itemid</tt> and
+      # <tt>anum</tt> fields on the #Entry, which are necessary for
+      # Entry#display_itemid and Entry#url.
       def run
         super
         @entry.itemid = @result['itemid'].to_i

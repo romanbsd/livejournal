@@ -30,6 +30,8 @@ module LiveJournal
       def initialize(user)
         super(user, 'login')
       end
+      # Fills in the <tt>fullname</tt> of the #User this was created with.
+      # (XXX this sould be updated to also get the list of communities, etc.)
       def run
         super
         u = @user  # should we clone here?

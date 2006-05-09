@@ -26,12 +26,12 @@ Example usage:
 ==Implemented Requests
 ===Login Requests
 * LiveJournal::Request::Login
-* LiveJournal::Request::SessionGenerate (only useful for syncing)
 ===Friend Requests
 * LiveJournal::Request::Friends
 * LiveJournal::Request::FriendOfs
 * LiveJournal::Request::CheckFriends
 ===Entry Requests
+* LiveJournal::Request::PostEvent
 * LiveJournal::Request::GetEvents
 * LiveJournal::Request::EditEvent
 

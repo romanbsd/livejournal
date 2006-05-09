@@ -121,10 +121,13 @@ module LiveJournal
       end
     end
 
+    # Used for LiveJournal's challenge-response based authentication,
+    # and used by ljrb for all requests.
     class GetChallenge < Req
       def initialize
         super(nil, 'getchallenge')
       end
+      # Returns the challenge.
       def run
         super
         return @result['challenge']
