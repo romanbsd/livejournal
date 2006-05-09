@@ -294,6 +294,15 @@ module LiveJournal
     end
 
     class EditEvent < Req
+      # To edit an entry, pass in a #User and an #Entry to this and run it.
+      # To delete an entry, pass in <tt>:delete => true</tt> as the third
+      # parameter.  (In this case, the Entry object only needs its
+      # <tt>itemid</tt> filled in.)
+      #
+      # The LiveJournal API for deletion is to "edit" an entry to have an
+      # empty event.  To prevent accidentally deleting entries, if you pass
+      # in an entry with an empty event without passing the delete flag, this
+      # will raise the AccidentalDeleteError exception.
       def initialize(user, entry, opts={})
         super(user, 'editevent')
 
