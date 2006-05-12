@@ -5,6 +5,7 @@ require 'livejournal/database'
 require 'optparse'
 require 'progressbar'
 
+create = false
 username = nil
 password = nil
 usejournal = nil
@@ -12,6 +13,8 @@ dbfile = nil
 get_entries = true
 get_comments = true
 opts = OptionParser.new do |opts|
+  opts.on('-c', '--create',
+          'Create a new database if necessary') { |create| }
   opts.on('-u', '--user USERNAME',
           'Login username') { |username| }
   opts.on('-p', '--password PASSWORD',
@@ -33,7 +36,12 @@ unless dbfile
   exit 1
 end
 
-db = LiveJournal::Database.new(dbfile, true)
+begin
+  db = LiveJournal::Database.new(dbfile, create)
+rescue Errno::ENOENT
+  puts "Use the --create flag to create a new database."
+  raise
+end
 username ||= db.username
 usejournal ||= db.usejournal
 

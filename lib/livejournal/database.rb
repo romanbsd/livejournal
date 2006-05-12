@@ -79,8 +79,9 @@ module LiveJournal
     # The underlying SQLite3 database.
     attr_reader :db
 
-    def initialize(filename, create=false)
-      exists = FileTest::exists? filename if create
+    def initialize(filename, create_if_necessary=false)
+      exists = FileTest::exists? filename
+      raise Errno::ENOENT if not create_if_necessary and not exists
       @db = SQLite3::Database.new(filename)
 
       # We'd like to use type translation, but it unfortunately fails on MAX()
@@ -88,13 +89,15 @@ module LiveJournal
       # @db.type_translation = true
 
       if exists
+        # Existing database!
         version = self.version
         unless version == EXPECTED_DATABASE_VERSION
           raise DatabaseError, "Database version mismatch -- db has #{version.inspect}, expected #{EXPECTED_DATABASE_VERSION.inspect}"
         end
       end
 
-      if create and not exists
+      if create_if_necessary and not exists
+        # New database!  Initialize it.
         transaction do
           @db.execute_batch(SCHEMA)
         end
