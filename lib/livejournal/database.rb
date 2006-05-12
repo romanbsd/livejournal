@@ -112,8 +112,13 @@ module LiveJournal
     end
 
     db_value 'username', :username
+    db_value 'usejournal', :usejournal
     db_value 'lastsync', :lastsync
     db_value 'version', :version
+
+    def journal
+      usejournal || username
+    end
 
     def run_schema!
       transaction do
@@ -217,9 +222,7 @@ module LiveJournal
       return @db.get_first_value('SELECT value FROM meta WHERE key=?', key)
     end
     def set_meta key, value
-      db.transaction do
-        @db.execute('INSERT OR REPLACE INTO meta VALUES (?, ?)', key, value)
-      end
+      @db.execute('INSERT OR REPLACE INTO meta VALUES (?, ?)', key, value)
     end
   end
 

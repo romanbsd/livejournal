@@ -35,11 +35,18 @@ end
 
 db = LiveJournal::Database.new(dbfile, true)
 username ||= db.username
+usejournal ||= db.usejournal
 
 unless username
   puts opts
   puts "ERROR: Must specify username."
   exit 1
+end
+
+if usejournal
+  puts "Journal: #{usejournal} (syncing as #{username})."
+else
+  puts "Journal: #{username}."
 end
 
 unless password
@@ -61,7 +68,8 @@ end
 
 user = LiveJournal::User.new(username, password)
 user.usejournal = usejournal
-db.username = user.usejournal || user.username
+db.username = user.username
+db.usejournal = usejournal if usejournal
 
 if get_entries
   puts "Fetching entries..."
