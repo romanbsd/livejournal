@@ -46,5 +46,5 @@ Integrates well with syncing.  See samples/export.
 
 ==Other Features
 * LiveJournal::LogJam -- interface with LogJam (http://logjam.danga.com) 's
-  journal exports
+  journal exports.  (XXX currently broken)
 

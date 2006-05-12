@@ -23,10 +23,12 @@
 #++
 #
 # This module extends the LiveJournal module to work with LogJam's data.
+# XXX this is currently not working due to database schema divergence
 
 require 'rexml/document'    # parsing logjam conf
 
 module LiveJournal
+  # XXX this is currently not working due to database schema divergence
   module LogJam
     # Path to LogJam data.
     def self.logjam_path
