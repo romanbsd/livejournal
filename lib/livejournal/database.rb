@@ -27,8 +27,9 @@
 require 'sqlite3'
 
 module LiveJournal
-  # A SQLite database dump.
   class DatabaseError < RuntimeError; end
+
+  # An interface for an SQLite database dump.
   class Database
     EXPECTED_DATABASE_VERSION = "2"
     SCHEMA = %q{
@@ -70,12 +71,14 @@ module LiveJournal
       );
       }.gsub(/^      /, '')
 
-    def self.optional_to_i(x)
+    def self.optional_to_i(x) # :nodoc:
       return nil if x.nil?
       return x.to_i
     end
 
+    # The underlying SQLite3 database.
     attr_reader :db
+
     def initialize(filename, create=false)
       exists = FileTest::exists? filename if create
       @db = SQLite3::Database.new(filename)
@@ -91,22 +94,32 @@ module LiveJournal
         end
       end
 
-      #trace!
       if create and not exists
-        run_schema!
+        transaction do
+          @db.execute_batch(SCHEMA)
+        end
         self.version = EXPECTED_DATABASE_VERSION
       end
     end
 
+    # Run a block within a single database transaction.
+    # Useful for bulk inserts.
     def transaction
       @db.transaction { yield }
     end
 
+    # Close the underlying database.  (Is this necessary?  Not sure.)
     def close
       @db.close
     end
 
-    def self.db_value(name, sym)
+    def get_meta key # :nodoc:
+      return @db.get_first_value('SELECT value FROM meta WHERE key=?', key)
+    end
+    def set_meta key, value  # :nodoc:
+      @db.execute('INSERT OR REPLACE INTO meta VALUES (?, ?)', key, value)
+    end
+    def self.db_value(name, sym)  # :nodoc:
       class_eval %{def #{sym}; get_meta(#{name.inspect}); end}
       class_eval %{def #{sym}=(v); set_meta(#{name.inspect}, v); end}
     end
@@ -116,17 +129,13 @@ module LiveJournal
     db_value 'lastsync', :lastsync
     db_value 'version', :version
 
+    # The the actual journal stored by this Database.
+    # (This is different than simply the username when usejournal is specified.)
     def journal
       usejournal || username
     end
 
-    def run_schema!
-      transaction do
-        @db.execute_batch(SCHEMA)
-      end
-    end
-    
-    # Turn tracing on.
+    # Turn tracing on.  Mostly useful for debugging.
     def trace!
       @db.trace() do |data, sql|
         puts "SQL> #{sql.inspect}"
@@ -138,20 +147,20 @@ module LiveJournal
       query_entry("select * from entry where itemid=?", itemid)
     end
 
-    # Given SQL that selects an entry, return that entry.
+    # Given SQL that selects an entry, return that Entry.
     def query_entry(sql, *sqlargs)
       row = @db.get_first_row(sql, *sqlargs)
       return Entry.new.load_from_database_row(row)
     end
 
-    # Given SQL that selects some entries, yield each entry.
-    def query_entries(sql, *sqlargs)
+    # Given SQL that selects some entries, yield each Entry.
+    def query_entries(sql, *sqlargs) # :yields: entry
       @db.execute(sql, *sqlargs) do |row|
         yield Entry.new.load_from_database_row(row)
       end
     end
 
-    # Yield a set of entries.
+    # Yield a set of entries, ordered by ascending itemid (first to last).
     def each_entry(where=nil, &block)
       sql = 'SELECT * FROM entry'
       sql += " WHERE #{where}" if where
@@ -164,22 +173,47 @@ module LiveJournal
       @db.get_first_value('SELECT COUNT(*) FROM entry').to_i
     end
 
+    # Store an Entry.
     def store_entry entry
       sql = 'INSERT OR REPLACE INTO entry VALUES (' + ("?, " * 16) + '?)'
       @db.execute(sql, *entry.to_database_row)
     end
 
+    # Used for Sync::Comments.
     def last_comment_meta
       Database::optional_to_i(
           @db.get_first_value('SELECT MAX(commentid) FROM comment'))
     end
+    # Used for Sync::Comments.
     def last_comment_full
       Database::optional_to_i(
           @db.get_first_value('SELECT MAX(commentid) FROM comment ' +
                               'WHERE body IS NOT NULL'))
     end
 
-    def _store_comments(comments, meta_only=true)
+    # Used for Sync::Comments.
+    def store_comments_meta(comments)
+      store_comments(comments, true)
+    end
+    # Used for Sync::Comments.
+    def store_comments_full(comments)
+      store_comments(comments, false)
+    end
+
+    # Used for Sync::Comments.
+    def store_usermap(usermap)
+      transaction do
+        sql = "INSERT OR REPLACE INTO users VALUES (?, ?)"
+        @db.prepare(sql) do |stmt|
+          usermap.each do |id, user|
+            stmt.execute(id, user)
+          end
+        end
+      end
+    end
+
+    private
+    def store_comments(comments, meta_only=true)
       transaction do
         sql = "INSERT OR REPLACE INTO comment "
         if meta_only
@@ -198,31 +232,6 @@ module LiveJournal
           end
         end
       end
-    end
-
-    def store_comments_meta(comments)
-      _store_comments(comments, true)
-    end
-    def store_comments_full(comments)
-      _store_comments(comments, false)
-    end
-
-    def store_usermap(usermap)
-      transaction do
-        sql = "INSERT OR REPLACE INTO users VALUES (?, ?)"
-        @db.prepare(sql) do |stmt|
-          usermap.each do |id, user|
-            stmt.execute(id, user)
-          end
-        end
-      end
-    end
-
-    def get_meta key
-      return @db.get_first_value('SELECT value FROM meta WHERE key=?', key)
-    end
-    def set_meta key, value
-      @db.execute('INSERT OR REPLACE INTO meta VALUES (?, ?)', key, value)
     end
   end
 

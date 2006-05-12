@@ -37,7 +37,7 @@ desc 'Generate RDoc'
 Rake::RDocTask.new :rdoc do |rd|
   rd.title = "ljrb (LiveJournal Ruby module) Documentation"
   rd.rdoc_dir = 'doc'
-  rd.rdoc_files.add 'lib', 'README', 'LICENSE'
+  rd.rdoc_files.add 'lib/livejournal/*.rb', 'README', 'LICENSE'
   rd.main = 'README'
 end
 
