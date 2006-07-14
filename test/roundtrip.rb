@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
-require 'livejournal/login'
+$:.unshift '../lib'
+
 require 'livejournal/entry'
 require 'test/unit'
 
@@ -15,8 +16,7 @@ class TC_RoundTrip < Test::Unit::TestCase
     postevent = Request::PostEvent.new(@user, entry)
     postevent.run
 
-    getevents = Request::GetEvents.new(@user,
-                                                    :itemid => entry.itemid)
+    getevents = Request::GetEvents.new(@user, :itemid => entry.itemid)
     new_entry = getevents.run
     assert_equal(new_entry, entry)
 
@@ -38,6 +38,7 @@ class TC_RoundTrip < Test::Unit::TestCase
     e.comments = :noemail
     e.preformatted = true
     e.security = :friends
+    e.location = "test"
     roundtrip e
   end
 end
