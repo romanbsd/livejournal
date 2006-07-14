@@ -29,7 +29,12 @@ module LiveJournal
   # See LiveJournal::Request::Friends to get an array of these.
   class Friend
     attr_accessor :username, :fullname
-    attr_accessor :background, :foreground, :groupmask, :type
+    # as HTML color, like '#ff0000'
+    attr_accessor :background, :foreground
+    # bitfield of friend groups this friend is a member of
+    attr_accessor :groupmask
+    # friend type. possible values: :community, :news, :syndicated, :shared, :user
+    attr_accessor :type
     def initialize
       @username = nil
       @fullname = nil
@@ -44,7 +49,16 @@ module LiveJournal
       @foreground = req['fg']
       @background = req['bg']
       @groupmask = req['groupmask']
-      @type = req['type']
+      @type =
+        case req['type']
+          when 'community';  :community
+          when 'news';       :news
+          when 'syndicated'; :syndicated
+          when 'shared';     :shared
+          when nil;          :user
+          else raise LiveJournal::Request::ProtocolException.new(
+                       "unknown friend type: #{req['type']}")
+        end
       self
     end
     def to_s
