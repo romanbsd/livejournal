@@ -22,7 +22,9 @@
 # SOFTWARE.
 #++
 
+$:.unshift '../lib'
 require 'livejournal/comments-xml'
+require 'rexml/document'
 require 'test/unit'
 
 TEST_COMMENTS_META = %q{<?xml version="1.0" encoding='utf-8'?>
