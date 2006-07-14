@@ -68,18 +68,25 @@ module LiveJournal
 
   module Request
     class Friends < Req
-      attr_reader :friends
-      def initialize(user)
+      attr_reader :friends, :friendofs
+      # Allowed options:
+      # :include_friendofs => true:: also fill out @friendofs in single request
+      def initialize(user, opts={})
         super(user, 'getfriends')
         @friends = nil
+        @friendofs = nil
+        @request['includefriendof'] = true if opts.has_key? :include_friendofs
       end
       # Returns an array of LiveJournal::Friend.
       def run
         super
         @friends = build_array('friend') { |r| Friend.new.from_request(r) }
+        @friendofs = build_array('friendof') { |r| Friend.new.from_request(r) }
         @friends
       end
     end
+
+    # See Friends to fetch both friends and friend-ofs in one request.
     class FriendOfs < Req
       attr_reader :friendofs
       def initialize(user)
