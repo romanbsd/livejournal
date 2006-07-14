@@ -46,7 +46,8 @@ module LiveJournal
 
   class Entry
     attr_accessor :itemid, :anum, :subject, :event, :moodid, :mood
-    attr_accessor :music, :taglist, :pickeyword, :preformatted, :backdated
+    attr_accessor :music, :location, :taglist, :pickeyword
+    attr_accessor :preformatted, :backdated
     attr_accessor :comments  # values: {:normal, :none, :noemail}
     attr_reader :time  # a Ruby Time object
     attr_accessor :security  # values: {:public, :private, :friends, :custom}
@@ -60,6 +61,7 @@ module LiveJournal
       @moodid = nil
       @mood = nil
       @music = nil
+      @location = nil
       @taglist = []
       @pickeyword = nil
       @preformatted = false
@@ -73,7 +75,8 @@ module LiveJournal
     end
 
     def ==(other)
-      [:subject, :event, :moodid, :mood, :music, :taglist, :pickeyword,
+      [:subject, :event, :moodid,
+       :mood, :music, :location, :taglist, :pickeyword,
        :preformatted, :backdated, :comments, :security, :allowmask,
        :screening, :props].each do |attr|
         return false if send(attr) != other.send(attr)
@@ -123,6 +126,8 @@ module LiveJournal
         @moodid = value.to_i
       when 'current_music'
         @music = value
+      when 'current_location'
+        @location = value
       when 'taglist'
         @taglist = value.split(/, /).sort
       when 'picture_keyword'
@@ -213,6 +218,7 @@ module LiveJournal
       { 'current_mood' => self.mood,
         'current_moodid' => self.moodid,
         'current_music' => self.music,
+        'current_location' => self.location,
         'picture_keyword' => self.pickeyword,
         'taglist' => self.taglist.join(', '),
         'opt_preformatted' => self.preformatted ? 1 : 0,

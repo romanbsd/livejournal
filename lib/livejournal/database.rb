@@ -27,24 +27,24 @@
 require 'sqlite3'
 
 module LiveJournal
-  class DatabaseError < RuntimeError; end
-
   # An interface for an SQLite database dump.
   class Database
-    EXPECTED_DATABASE_VERSION = "2"
+    class Error < RuntimeError; end
+
+    EXPECTED_DATABASE_VERSION = "3"
     SCHEMA = %q{
       CREATE TABLE meta (
         key TEXT PRIMARY KEY,
-        value TEXT 
+        value TEXT
       );
       CREATE TABLE entry (
         itemid INTEGER PRIMARY KEY,
         anum INTEGER,
         subject TEXT,
         event TEXT,
-        moodid INTEGER, mood TEXT, music TEXT, taglist TEXT, 
-        pickeyword TEXT, preformatted INTEGER, backdated INTEGER, 
-        comments INTEGER, year INTEGER, month INTEGER, day INTEGER, 
+        moodid INTEGER, mood TEXT, music TEXT, location TEXT, taglist TEXT,
+        pickeyword TEXT, preformatted INTEGER, backdated INTEGER,
+        comments INTEGER, year INTEGER, month INTEGER, day INTEGER,
         timestamp INTEGER, security INTEGER
       );
       CREATE INDEX dateindex ON entry (year, month, day);
@@ -92,7 +92,7 @@ module LiveJournal
         # Existing database!
         version = self.version
         unless version == EXPECTED_DATABASE_VERSION
-          raise DatabaseError, "Database version mismatch -- db has #{version.inspect}, expected #{EXPECTED_DATABASE_VERSION.inspect}"
+          raise Error, "Database version mismatch -- db has #{version.inspect}, expected #{EXPECTED_DATABASE_VERSION.inspect}"
         end
       end
 
@@ -178,7 +178,7 @@ module LiveJournal
 
     # Store an Entry.
     def store_entry entry
-      sql = 'INSERT OR REPLACE INTO entry VALUES (' + ("?, " * 16) + '?)'
+      sql = 'INSERT OR REPLACE INTO entry VALUES (' + ("?, " * 17) + '?)'
       @db.execute(sql, *entry.to_database_row)
     end
 
@@ -244,19 +244,19 @@ module LiveJournal
       @itemid, @anum = row[0].to_i, row[1].to_i
       @subject, @event = row[2], row[3]
       @moodid, @mood = row[4].nil? ? nil : row[4].to_i, row[5]
-      @music, @taglist, @pickeyword = row[6], row[7], row[8]
+      @music, @location, @taglist, @pickeyword = row[6], row[7], row[8], row[9]
       @taglist = if @taglist then @taglist.split(/, /) else [] end
-      @preformatted, @backdated = !row[9].nil?, !row[10].nil?
-      @comments = case Database::optional_to_i(row[11])
+      @preformatted, @backdated = !row[10].nil?, !row[11].nil?
+      @comments = case Database::optional_to_i(row[12])
         when nil; :normal
         when 1; :none
         when 2; :noemail
-        else raise DatabaseError, "Bad comments value: #{row[11].inspect}"
+        else raise Database::Error, "Bad comments value: #{row[12].inspect}"
       end
 
-      @time = Time.at(row[15].to_i).utc
+      @time = Time.at(row[16].to_i).utc
 
-      case Database::optional_to_i(row[16])
+      case Database::optional_to_i(row[17])
       when nil
         @security = :public
       when 0
@@ -265,7 +265,7 @@ module LiveJournal
         @security = :friends
       else
         @security = :custom
-        @allowmask = row[16]
+        @allowmask = row[17]
       end
 
       self
@@ -283,7 +283,7 @@ module LiveJournal
         when :custom; @allowmask
       end
       [@itemid, @anum, @subject, @event,
-       @moodid, @mood, @music, @taglist.join(', '), @pickeyword,
+       @moodid, @mood, @music, @location, @taglist.join(', '), @pickeyword,
        @preformatted ? 1 : nil, @backdated ? 1 : nil, comments,
        @time.year, @time.mon, @time.day, @time.to_i, security]
     end
