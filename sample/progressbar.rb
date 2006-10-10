@@ -15,7 +15,11 @@ class ProgressBar
   end
 
   def update(cur, max)
-    fill_to(@width*cur/max)
+    if max > 0
+      fill_to(@width*cur/max)
+    else
+      fill_to(@width)
+    end
   end
 
   def finish(error=false)
