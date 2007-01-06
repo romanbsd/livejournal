@@ -53,7 +53,14 @@ module LiveJournal
     attr_accessor :security  # values: {:public, :private, :friends, :custom}
     attr_accessor :allowmask
     attr_accessor :screening # values {:default, :all, :anonymous, :nonfriends, :none}
+
+    # A hash of any leftover properties (including those in KNOWN_EXTRA_PROPS)
+    # that aren't explicitly supported by ljrb.  (See the
+    # Request::GetEvents#new for details.)
     attr_accessor :props
+    # A list of extra properties we're aware of but don't wrap explicitly.
+    # Upon retrieval stored in the props hash.
+    KNOWN_EXTRA_PROPS = %w{revnum revtime commentalter unknown8bit useragent}
 
     def initialize
       @subject = nil
@@ -118,7 +125,8 @@ module LiveJournal
 
       self
     end
-    def load_prop(name, value) #:nodoc:#
+
+    def load_prop(name, value, strict=false) #:nodoc:#
       case name
       when 'current_mood'
         @mood = value.to_i
@@ -152,14 +160,19 @@ module LiveJournal
         end
       when 'hasscreened'
         @screened = value == '1'
-      # and then some props we just store by name
-      when 'revnum';       @props[name] = value
-      when 'revtime';      @props[name] = value
-      when 'commentalter'; @props[name] = value
-      when 'unknown8bit';  @props[name] = value
       else
+        # LJ keeps adding props, so we store all leftovers in a hash.
+        # Unfortunately, we don't know which of these need to be passed
+        # on to new entries.  This may mean we drop some data when we
+        # round-trip.
+        #
+        # Some we've seen so far:
+        #   revnum, revtime, commentalter, unknown8bit, useragent
         @props[name] = value
-        raise Request::ProtocolException, "unknown prop (#{name}, #{value})"
+
+        unless KNOWN_EXTRA_PROPS.include? name or not strict
+          raise Request::ProtocolException, "unknown prop (#{name}, #{value})"
+        end
       end
     end
 
@@ -262,9 +275,27 @@ module LiveJournal
       # * <tt>GetEvents.new(user, :itemid => itemid)</tt> (fetch a single item)
       # * <tt>GetEvents.new(user, :recent => n)</tt> (fetch most recent n itemds)
       # * <tt>GetEvents.new(user, :lastsync => lastsync)</tt> (for syncing)
+      #
+      # We support one final option called <tt>:strict</tt>, which requires
+      # a bit of explanation.
+      #
+      # Whenever LiveJournal adds new metadata to entries (such as the
+      # location field, which was introduced in 2006) it also exposes this
+      # metadata via the LJ protocol.  However, ljrb can't know about future
+      # metadata and doesn't know how to handle it properly.  Some metadata
+      # (like the current location) must be sent to the server to
+      # publish an entry correctly; others, like the last revision time,
+      # must not be.
+      #
+      # Normally, when we see a new property we abort with a ProtocolException.
+      # If the object is constructed with <tt>:strict => false</tt>, we'll
+      # skip over any new properties.
       def initialize(user, opts)
         super(user, 'getevents')
         @request['lineendings'] = 'unix'
+
+        @strict = true
+        @strict = opts[:strict] if opts.has_key? :strict
 
         if opts.has_key? :itemid
           @request['selecttype'] = 'one'
@@ -293,7 +324,7 @@ module LiveJournal
 
         each_in_array('prop') do |prop|
           itemid = prop['itemid'].to_i
-          entries[itemid].load_prop(prop['name'], prop['value'])
+          entries[itemid].load_prop(prop['name'], prop['value'], @strict)
         end
 
         if @request.has_key? 'itemid'

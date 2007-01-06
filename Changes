@@ -1,0 +1,4 @@
+0.3.1:  Sat, 06 Jan 2007 10:21:05 -0800
+- Don't die on the "useragent" prop.
+- Add a :strict => false option to GetEvents so we won't die on any new prop.
+  see the GetEvents documentation for details.
