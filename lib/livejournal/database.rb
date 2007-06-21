@@ -54,7 +54,7 @@ module LiveJournal
         posterid INTEGER,
         itemid INTEGER,
         parentid INTEGER,
-        state TEXT,  -- screened/deleted/active
+        state TEXT,  -- screened/deleted/frozen/active
         subject TEXT,
         body TEXT,
         timestamp INTEGER  -- unix timestamp

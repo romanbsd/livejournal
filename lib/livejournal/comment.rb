@@ -49,6 +49,7 @@ module LiveJournal
       when 'A'; :active
       when 'D'; :deleted
       when 'S'; :screened
+      when 'F'; :frozen
       else raise ArgumentError, "Invalid comment state: #{str.inspect}"
       end
     end
@@ -60,6 +61,7 @@ module LiveJournal
       when :active;   nil
       when :deleted;  'D'
       when :screened; 'S'
+      when :frozen;   'F'
       else raise ArgumentError, "Invalid comment state: #{state.inspect}"
       end
     end
