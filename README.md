@@ -1,50 +1,53 @@
-=ljrb: LiveJournal Ruby module
+# ljrb: LiveJournal Ruby module
 
-Copyright:: Copyright (C) 2005 Evan Martin <martine@danga.com>
-Website:: http://neugierig.org/software/livejournal/ruby
+Copyright: Copyright (C) 2005 Evan Martin <martine@danga.com>
+
+Website: http://neugierig.org/software/livejournal/ruby
 
 Example usage:
-  require 'livejournal/login'
+    require 'livejournal/login'
 
-  puts "Logging in..."
-  user = LiveJournal::User.new('test', 'test')
-  login = LiveJournal::Request::Login.new(user)
-  login.run
+    puts "Logging in..."
+    user = LiveJournal::User.new('test', 'test')
+    login = LiveJournal::Request::Login.new(user)
+    login.run
 
-  puts "Login response:"
-  login.dumpresponse
+    puts "Login response:"
+    login.dumpresponse
 
-  puts "User's full name: #{user.fullname}"
+    puts "User's full name: #{user.fullname}"
 
-==LiveJournal Datatypes
+## LiveJournal Datatypes
 * LiveJournal::Server
 * LiveJournal::User
 * LiveJournal::Entry
 * LiveJournal::Comment
 * LiveJournal::Friend
 
-==Implemented Requests
-===Login Requests
+## Implemented Requests
+
+### Login Requests
 * LiveJournal::Request::Login
-===Friend Requests
+
+### Friend Requests
 * LiveJournal::Request::Friends
 * LiveJournal::Request::FriendOfs
 * LiveJournal::Request::CheckFriends
-===Entry Requests
+
+### Entry Requests
 * LiveJournal::Request::PostEvent
 * LiveJournal::Request::GetEvents
 * LiveJournal::Request::EditEvent
 
-==Journal Offline Synchronization
+## Journal Offline Synchronization
 * LiveJournal::Sync::Entries
 * LiveJournal::Sync::Comments
 See samples/export for an example of how to use these.
 
-==SQLite3 Support
+## SQLite3 Support
 * LiveJournal::Database -- storing/loading entries+comments with SQLite3
 Integrates well with syncing.  See samples/export.
 
-==Other Features
+## Other Features
 * LiveJournal::LogJam -- interface with LogJam (http://logjam.danga.com) 's
   journal exports.  (XXX currently broken)
-
