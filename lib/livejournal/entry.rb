@@ -129,7 +129,7 @@ module LiveJournal
     def load_prop(name, value, strict=false) #:nodoc:#
       case name
       when 'current_mood'
-        @mood = value.to_i
+        @mood = value
       when 'current_moodid'
         @moodid = value.to_i
       when 'current_music'
