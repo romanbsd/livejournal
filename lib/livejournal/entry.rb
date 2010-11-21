@@ -53,6 +53,7 @@ module LiveJournal
     attr_accessor :security  # values: {:public, :private, :friends, :custom}
     attr_accessor :allowmask
     attr_accessor :screening # values {:default, :all, :anonymous, :nonfriends, :none}
+    attr_accessor :interface # values {:web, ...}
 
     # A hash of any leftover properties (including those in KNOWN_EXTRA_PROPS)
     # that aren't explicitly supported by ljrb.  (See the
@@ -60,7 +61,11 @@ module LiveJournal
     attr_accessor :props
     # A list of extra properties we're aware of but don't wrap explicitly.
     # Upon retrieval stored in the props hash.
-    KNOWN_EXTRA_PROPS = %w{revnum revtime commentalter unknown8bit useragent}
+    # See: http://www.livejournal.com/doc/server/ljp.csp.proplist.html
+    KNOWN_EXTRA_PROPS = %w{admin_content_flag adult_content commentalter
+      current_coords personifi_lang personifi_tags personifi_word_count
+      qotdid revnum revtime sms_msgid statusvis syn_id syn_link unknown8bit
+      unsuspend_supportid used_rte useragent verticals_list}
 
     def initialize
       @subject = nil
@@ -74,7 +79,7 @@ module LiveJournal
       @preformatted = false
       @backdated = false
       @comments = :normal
-      @time = nil
+      @time = Time.now
       @security = :public
       @allowmask = nil
       @screening = :default
@@ -128,26 +133,26 @@ module LiveJournal
 
     def load_prop(name, value, strict=false) #:nodoc:#
       case name
+      when 'current_location'
+        @location = value
       when 'current_mood'
         @mood = value
       when 'current_moodid'
         @moodid = value.to_i
       when 'current_music'
         @music = value
-      when 'current_location'
-        @location = value
-      when 'taglist'
-        @taglist = value.split(/, /).sort
-      when 'picture_keyword'
-        @pickeyword = value
-      when 'opt_preformatted'
-        @preformatted = value == '1'
+      when 'hasscreened'
+        @screened = value == '1'
+      when 'interface'
+        @interface = value.intern
+      when 'opt_backdated'
+        @backdated = value == '1'
       when 'opt_nocomments'
         @comments = :none
       when 'opt_noemail'
         @comments = :noemail
-      when 'opt_backdated'
-        @backdated = value == '1'
+      when 'opt_preformatted'
+        @preformatted = value == '1'
       when 'opt_screening'
         case value
         when 'A'; @screening = :all
@@ -158,8 +163,10 @@ module LiveJournal
           raise LiveJournalException,
             "unknown opt_screening value #{value.inspect}"
         end
-      when 'hasscreened'
-        @screened = value == '1'
+      when 'picture_keyword'
+        @pickeyword = value
+      when 'taglist'
+        @taglist = value.split(/,\s/).sort
       else
         # LJ keeps adding props, so we store all leftovers in a hash.
         # Unfortunately, we don't know which of these need to be passed
