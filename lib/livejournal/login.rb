@@ -36,6 +36,7 @@ module LiveJournal
         super
         u = @user  # should we clone here?
         u.fullname = @result['name']
+        u.journals = @result.select{|k,v| k=~/^access_\d+/}.collect{|k,v| v}.sort
         u
       end
     end

@@ -1,3 +1,6 @@
+0.3.3: ?
+- Populate the list of journals the user has posting access to.
+
 0.3.2: Mon, Nov 22 2010
 - Support for the new LiveJournal entry properties
 

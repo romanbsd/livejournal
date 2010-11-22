@@ -44,6 +44,9 @@ module LiveJournal
     attr_accessor :usejournal
     # User's self-reported name, as retrieved by LiveJournal::Request::Login
     attr_accessor :fullname
+    # Journals the user has posting access to
+    attr_accessor :journals
+
     def initialize(username=nil, password=nil, server=nil)
       @username = username
       @password = password
