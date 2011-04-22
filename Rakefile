@@ -16,9 +16,9 @@ begin
     gem.name = 'livejournal'
     gem.summary = 'Module for interacting with livejournal'
     gem.description = %q{LiveJournal module.  Post to livejournal, retrieve friends lists, edit entries, sync journal to an offline database.}
-    gem.email = 'martine@danga.com'
+    gem.email = 'romanbsd@yahoo.com'
     gem.homepage = 'http://neugierig.org/software/livejournal/ruby/'
-    gem.authors = ['Evan Martin']
+    gem.authors = ['Evan Martin', 'Roman Shterenzon']
     gem.files = FILES.to_a
   end
 rescue LoadError

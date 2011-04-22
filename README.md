@@ -39,6 +39,10 @@ Example usage:
 * LiveJournal::Request::GetEvents
 * LiveJournal::Request::EditEvent
 
+### Comments Requests
+* Livejournal::Request::GetComments
+* Livejournal::Request::GetRecentComments
+
 ## Journal Offline Synchronization
 * LiveJournal::Sync::Entries
 * LiveJournal::Sync::Comments
