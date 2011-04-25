@@ -21,6 +21,7 @@ begin
     gem.authors = ['Evan Martin', 'Roman Shterenzon']
     gem.files = FILES.to_a
   end
+  Jeweler::GemcutterTasks.new
 rescue LoadError
   puts "Jeweler not available. Install it with: gem install jeweler"
 end
