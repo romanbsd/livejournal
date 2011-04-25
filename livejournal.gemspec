@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Evan Martin", "Roman Shterenzon"]
-  s.date = %q{2011-04-23}
+  s.date = %q{2011-04-24}
   s.description = %q{LiveJournal module.  Post to livejournal, retrieve friends lists, edit entries, sync journal to an offline database.}
   s.email = %q{romanbsd@yahoo.com}
   s.extra_rdoc_files = [
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
     "LICENSE",
     "README.md",
     "Rakefile",
+    "VERSION",
     "lib/livejournal.rb",
     "lib/livejournal/basic.rb",
     "lib/livejournal/comment.rb",

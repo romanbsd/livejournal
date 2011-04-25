@@ -5,7 +5,7 @@ require 'rake/rdoctask'
 require 'rake/testtask'
 
 FILES = FileList[
-  'Rakefile', 'README.md', 'Changes', 'LICENSE', 'setup.rb',
+  'Rakefile', 'README.md', 'Changes', 'LICENSE', 'setup.rb', 'VERSION',
   'lib/**/*', 'sample/*', 'test/*'
 ]
 
