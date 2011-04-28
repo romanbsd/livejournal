@@ -4,6 +4,8 @@ Copyright: Copyright (C) 2005 Evan Martin <martine@danga.com>
 
 Website: http://neugierig.org/software/livejournal/ruby
 
+Documentation: http://rubydoc.info/gems/livejournal/
+
 Example usage:
     require 'livejournal/login'
 
