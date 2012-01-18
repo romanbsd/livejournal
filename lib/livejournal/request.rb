@@ -88,7 +88,7 @@ module LiveJournal
         }.join("&")
         p request if @verbose
         return if @dryrun
-        response, data = h.post('/interface/flat', request)
+        response, data = h.post('/interface/flat', request, {"User-Agent" => "ljrb/0.3.x"})
         parseresponse(data)
         dumpresponse if @verbose
         if @result['success'] != "OK"
