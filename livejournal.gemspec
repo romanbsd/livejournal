@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{livejournal}
-  s.version = "0.3.4"
+  s.name = "livejournal"
+  s.version = "0.3.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Evan Martin", "Roman Shterenzon"]
-  s.date = %q{2011-04-25}
-  s.description = %q{LiveJournal module.  Post to livejournal, retrieve friends lists, edit entries, sync journal to an offline database.}
-  s.email = %q{romanbsd@yahoo.com}
+  s.date = "2012-01-18"
+  s.description = "LiveJournal module.  Post to livejournal, retrieve friends lists, edit entries, sync journal to an offline database."
+  s.email = "romanbsd@yahoo.com"
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md"
@@ -45,21 +45,12 @@ Gem::Specification.new do |s|
     "test/roundtrip.rb",
     "test/time.rb"
   ]
-  s.homepage = %q{http://neugierig.org/software/livejournal/ruby/}
+  s.homepage = "http://neugierig.org/software/livejournal/ruby/"
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.7}
-  s.summary = %q{Module for interacting with livejournal}
-  s.test_files = [
-    "test/checkfriends.rb",
-    "test/comments-xml.rb",
-    "test/database.rb",
-    "test/login.rb",
-    "test/roundtrip.rb",
-    "test/time.rb"
-  ]
+  s.rubygems_version = "1.8.11"
+  s.summary = "Module for interacting with livejournal"
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
