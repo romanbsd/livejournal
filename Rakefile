@@ -1,7 +1,4 @@
-require 'rake'
-require 'rake/gempackagetask'
-require 'rake/packagetask'
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'rake/testtask'
 
 FILES = FileList[
