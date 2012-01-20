@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "livejournal"
-  s.version = "0.3.5"
+  s.version = "0.3.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Evan Martin", "Roman Shterenzon"]
-  s.date = "2012-01-18"
+  s.date = "2012-01-20"
   s.description = "LiveJournal module.  Post to livejournal, retrieve friends lists, edit entries, sync journal to an offline database."
   s.email = "romanbsd@yahoo.com"
   s.extra_rdoc_files = [
