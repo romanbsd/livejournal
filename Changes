@@ -1,3 +1,9 @@
+0.3.6: Fri, Jan 20 2012
+- Ruby 1.9.3 compatibility
+
+0.3.5: Thu, Jan 19 2012
+- Send User-Agent header
+
 0.3.3: Sat, Apr 23 2011
 - Populate the list of journals the user has posting access to.
 
