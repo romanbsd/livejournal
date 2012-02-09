@@ -54,6 +54,7 @@ module LiveJournal
     attr_accessor :allowmask
     attr_accessor :screening # values {:default, :all, :anonymous, :nonfriends, :none}
     attr_accessor :interface # values {:web, ...}
+    attr_accessor :give_features
 
     # A hash of any leftover properties (including those in KNOWN_EXTRA_PROPS)
     # that aren't explicitly supported by ljrb.  (See the
@@ -83,6 +84,7 @@ module LiveJournal
       @security = :public
       @allowmask = nil
       @screening = :default
+      @give_features = nil
       @props = {}
     end
 
@@ -167,6 +169,8 @@ module LiveJournal
         @pickeyword = value
       when 'taglist'
         @taglist = value.split(/,\s/).sort
+      when 'give_features'
+          @give_features = value == '1'
       else
         # LJ keeps adding props, so we store all leftovers in a hash.
         # Unfortunately, we don't know which of these need to be passed
@@ -230,6 +234,8 @@ module LiveJournal
         req['security'] = 'usemask'
         req['allowmask'] = self.allowmask
       end
+
+      req['give_features']  = self.give_features ? 1 : 0
 
       req['year'], req['mon'], req['day'] = 
         self.time.year, self.time.mon, self.time.day
