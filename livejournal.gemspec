@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "livejournal"
-  s.version = "0.3.6"
+  s.version = "0.3.7"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Evan Martin", "Roman Shterenzon"]
-  s.date = "2012-01-20"
+  s.date = "2012-02-10"
   s.description = "LiveJournal module.  Post to livejournal, retrieve friends lists, edit entries, sync journal to an offline database."
   s.email = "romanbsd@yahoo.com"
   s.extra_rdoc_files = [
@@ -47,7 +47,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://neugierig.org/software/livejournal/ruby/"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.11"
+  s.rubygems_version = "1.8.15"
   s.summary = "Module for interacting with livejournal"
 
   if s.respond_to? :specification_version then
