@@ -1,8 +1,11 @@
+0.3.7: Fri, Feb 10 2012
+- give_features support (Alexander Logunov)
+
 0.3.6: Fri, Jan 20 2012
-- Ruby 1.9.3 compatibility
+- Ruby 1.9.3 compatibility (Aleksandr Zykov)
 
 0.3.5: Thu, Jan 19 2012
-- Send User-Agent header
+- Send User-Agent header (Aleksandr Zykov)
 
 0.3.3: Sat, Apr 23 2011
 - Populate the list of journals the user has posting access to.
