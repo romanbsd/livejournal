@@ -33,7 +33,7 @@ module LiveJournal
     attr_accessor :background, :foreground
     # bitfield of friend groups this friend is a member of
     attr_accessor :groupmask
-    # friend type. possible values: :community, :news, :syndicated, :shared, :user
+    # friend type. possible values: :community, :news, :syndicated, :shared, :identity, :user
     attr_accessor :type
     def initialize
       @username = nil
@@ -55,6 +55,7 @@ module LiveJournal
           when 'news';       :news
           when 'syndicated'; :syndicated
           when 'shared';     :shared
+          when 'identity';   :identity
           when nil;          :user
           else raise LiveJournal::Request::ProtocolException.new(
                        "unknown friend type: #{req['type']}")
