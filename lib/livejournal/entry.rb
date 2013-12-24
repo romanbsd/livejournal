@@ -80,7 +80,6 @@ module LiveJournal
       @preformatted = false
       @backdated = false
       @comments = :normal
-      @time = Time.now
       @security = :public
       @allowmask = nil
       @screening = :default
@@ -237,9 +236,15 @@ module LiveJournal
 
       req['give_features']  = self.give_features ? 1 : 0
 
-      req['year'], req['mon'], req['day'] = 
-        self.time.year, self.time.mon, self.time.day
-      req['hour'], req['min'] = self.time.hour, self.time.min
+      if req['mode'] == 'postevent' && self.time.nil?
+        self.time = Time.now.gmtime
+      end
+
+      if self.time
+        req['year'], req['mon'], req['day'] =
+            self.time.year, self.time.mon, self.time.day
+        req['hour'], req['min'] = self.time.hour, self.time.min
+      end
 
       { 'current_mood' => self.mood,
         'current_moodid' => self.moodid,
