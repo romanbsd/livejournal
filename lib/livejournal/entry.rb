@@ -88,6 +88,8 @@ module LiveJournal
     end
 
     def ==(other)
+      return false if self.class != other.class
+      
       [:subject, :event, :moodid,
        :mood, :music, :location, :taglist, :pickeyword,
        :preformatted, :backdated, :comments, :security, :allowmask,
