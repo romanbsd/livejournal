@@ -66,7 +66,7 @@ module LiveJournal
     KNOWN_EXTRA_PROPS = %w{admin_content_flag adult_content commentalter
       current_coords personifi_lang personifi_tags personifi_word_count
       qotdid revnum revtime sms_msgid statusvis syn_id syn_link unknown8bit
-      unsuspend_supportid used_rte useragent verticals_list}
+      unsuspend_supportid used_rte useragent verticals_list poster_ip uniq}
 
     def initialize
       @subject = nil
@@ -88,6 +88,8 @@ module LiveJournal
     end
 
     def ==(other)
+      return false if self.class != other.class
+      
       [:subject, :event, :moodid,
        :mood, :music, :location, :taglist, :pickeyword,
        :preformatted, :backdated, :comments, :security, :allowmask,
